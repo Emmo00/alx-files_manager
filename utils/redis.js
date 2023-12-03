@@ -1,13 +1,15 @@
-import { createClient } from "redis";
+import { createClient } from 'redis';
 
 class RedisClient {
   constructor() {
     this.client = createClient();
-    this.client.on("error", console.log);
+    this.client.on('error', console.log);
   }
+
   isAlive() {
-    return this.client.ping();
+    return this.client.connected;
   }
+
   async get(key) {
     return new Promise((res, rej) => {
       this.client.get(key, (err, value) => {
@@ -36,4 +38,6 @@ class RedisClient {
   }
 }
 
-export default redisClient = new RedisClient();
+const redisClient = new RedisClient();
+
+export default redisClient;
