@@ -4,6 +4,7 @@ class RedisClient {
   constructor() {
     this.client = createClient();
     this.client.on('error', console.log);
+    Promise.resolve(this.client)
   }
 
   isAlive() {
