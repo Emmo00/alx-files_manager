@@ -24,12 +24,12 @@ async function getConnect(req, res) {
 }
 
 async function getDisconnect(req, res) {
-  const token = req.headers['X-Token'];
+  const token = req.header('X-Token');
   const authToken = `auth_${token}`;
   const userId = await redisClient.get(authToken);
-  if (!userId) return res.send({ error: 'Unauthorized' }).send(401);
+  if (!userId) return res.send({ error: 'Unauthorized' }).status(401);
   await redisClient.del(authToken);
-  return res.status(204);
+  return res.send('').status(204);
 }
 
 export default { getConnect, getDisconnect };
