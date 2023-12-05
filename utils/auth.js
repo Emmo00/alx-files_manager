@@ -1,3 +1,5 @@
+/* eslint-disable import/prefer-default-export */
+
 function extractCredentials(authHeader) {
   /* global atob */
   const decodedHeader = atob(authHeader);
@@ -5,4 +7,4 @@ function extractCredentials(authHeader) {
   return { email: cred[0], password: cred[1] };
 }
 
-export default { extractCredentials };
+export { extractCredentials };
