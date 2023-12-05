@@ -17,10 +17,10 @@ async function postNew(req, res) {
 }
 
 async function getMe(req, res) {
-  const token = req.headers['X-Token'];
+  const token = req.header('X-Token');
   const authToken = `auth_${token}`;
   const userId = await redisClient.get(authToken);
-  if (!userId) return res.send({ error: 'Unauthorized' }).send(401);
+  if (!userId) return res.send({ error: 'Unauthorized' }).status(401);
   const user = dbClient.getUserById(userId);
   return res.send(user).status(200);
 }

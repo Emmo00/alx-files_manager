@@ -1,4 +1,4 @@
-import { MongoClient } from 'mongodb';
+import { MongoClient, ObjectId } from 'mongodb';
 
 class DBClient {
   constructor() {
@@ -23,17 +23,17 @@ class DBClient {
   }
 
   async emailExists(email) {
-    const user = await this.client.db().findOne({ email });
+    const user = await this.client.db().collection('users').findOne({ email });
     return user !== null;
   }
 
   async createUser(email, password) {
-    const newUser = await this.client.db().insertOne({ email, password });
-    return { id: newUser.insertedId, email: newUser.email };
+    const newUser = await this.client.db().collection('users').insertOne({ email, password });
+    return { id: newUser.insertedId, email };
   }
 
   async correctPassword(email, hashedPassword) {
-    const user = await this.client.db().findOne({ email }, { password: 1 });
+    const user = await this.client.db().collection('users').findOne({ email }, { password: 1 });
     if (hashedPassword === user.password) {
       return true;
     }
@@ -41,13 +41,13 @@ class DBClient {
   }
 
   async getUserByEmail(email) {
-    const user = await this.client.db().findOne({ email });
+    const user = await this.client.db().collection('users').findOne({ email });
     return { id: user.insertedId, email: user.email };
   }
 
   async getUserById(userId) {
-    const user = await this.client.db().findOne({ _id: userId });
-    return { id: user.insertedId, email: user.email };
+    const user = await this.client.db().collection('users').findById(ObjectId(userId));
+    return user;
   }
 }
 
