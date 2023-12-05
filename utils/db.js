@@ -31,6 +31,10 @@ class DBClient {
     const newUser = await this.client.db().insertOne({ email, password });
     return newUser;
   }
+
+  async correctPassword(email, hashedPassword) {
+    const user = await this.client.db().findOne({email}, {email: 1, password: 1});
+  }
 }
 
 const dbClient = new DBClient();
