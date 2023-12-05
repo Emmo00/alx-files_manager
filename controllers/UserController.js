@@ -1,5 +1,6 @@
 import sha1 from 'sha1';
 import dbClient from '../utils/db';
+import redisClient from '../utils/redis';
 
 async function postNew(req, res) {
   const { email, password } = req.body;
@@ -8,12 +9,20 @@ async function postNew(req, res) {
   if (await dbClient.emailExists(email)) {
     return res.send({ error: 'Already exist' }).status(400);
   }
-  const newUser = dbClient.createUser(
+  const newUser = await dbClient.createUser(
     email,
     sha1(password, { asString: true }),
   );
-  const { id, userEmail } = newUser;
-  return res.send({ id, email: userEmail }).status(201);
+  return res.send(newUser).status(201);
 }
 
-export default { postNew };
+async function getMe(req, res) {
+  const token = req.headers['X-Token'];
+  const authToken = `auth_${token}`;
+  const userId = await redisClient.get(authToken);
+  if (!userId) return res.send({ error: 'Unauthorized' }).send(401);
+  const user = dbClient.getUserById(userId);
+  return res.send(user).status(200);
+}
+
+export default { postNew, getMe };

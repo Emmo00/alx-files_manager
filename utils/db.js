@@ -29,11 +29,25 @@ class DBClient {
 
   async createUser(email, password) {
     const newUser = await this.client.db().insertOne({ email, password });
-    return newUser;
+    return { id: newUser.insertedId, email: newUser.email };
   }
 
   async correctPassword(email, hashedPassword) {
-    const user = await this.client.db().findOne({email}, {email: 1, password: 1});
+    const user = await this.client.db().findOne({ email }, { password: 1 });
+    if (hashedPassword === user.password) {
+      return true;
+    }
+    return false;
+  }
+
+  async getUserByEmail(email) {
+    const user = await this.client.db().findOne({ email });
+    return { id: user.insertedId, email: user.email };
+  }
+
+  async getUserById(userId) {
+    const user = await this.client.db().findOne({ _id: userId });
+    return { id: user.insertedId, email: user.email };
   }
 }
 

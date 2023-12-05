@@ -21,7 +21,7 @@ class RedisClient {
 
   async set(key, value, duration) {
     return new Promise((res, rej) => {
-      this.client.set(key, value, duration, (err, reply) => {
+      this.client.setex(key, duration, value, (err, reply) => {
         if (err) rej(err);
         res(reply);
       });
