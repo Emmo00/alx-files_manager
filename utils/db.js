@@ -72,8 +72,8 @@ class DBClient {
   }
 
   async createFolder(folder) {
-    const newFolder = this.client.db().collection('files').insertOne(folder);
-    return { id: newFolder.insertedId, ...folder };
+    const newFolder = await this.client.db().collection('files').insertOne(folder);
+    return newFolder;
   }
 
   async createFile(file) {

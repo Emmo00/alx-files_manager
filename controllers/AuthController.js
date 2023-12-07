@@ -5,23 +5,23 @@ import { login } from '../utils/auth';
 
 async function getConnect(req, res) {
   const { error, email } = await login(req);
-  if (error) return req.send({ error }).status(401);
+  if (error) return res.status(401).send({ error });
 
   const user = await dbClient.getUserByEmail(email);
   const token = uuidv4();
   const authToken = `auth_${token}`;
 
   await redisClient.set(authToken, user.id, 24 * 60 * 60);
-  return res.send({ token }).status(200);
+  return res.status(200).send({ token });
 }
 
 async function getDisconnect(req, res) {
   const token = req.header('X-Token');
   const authToken = `auth_${token}`;
   const userId = await redisClient.get(authToken);
-  if (!userId) return res.send({ error: 'Unauthorized' }).status(401);
+  if (!userId) return res.status(401).send({ error: 'Unauthorized' });
   await redisClient.del(authToken);
-  return res.send('').status(204);
+  return res.status(204).send('');
 }
 
 export default { getConnect, getDisconnect };

@@ -1,29 +1,28 @@
 import sha1 from 'sha1';
 import dbClient from '../utils/db';
-import redisClient from '../utils/redis';
+import { getUserIdFromSession } from '../utils/auth';
 
 async function postNew(req, res) {
   const { email, password } = req.body;
-  if (!email) return res.send({ error: 'Missing email' }).status(400);
-  if (!password) return res.send({ error: 'Missing password' }).status(400);
+  if (!email) return res.status(400).send({ error: 'Missing email' });
+  if (!password) return res.status(400).send({ error: 'Missing password' });
   if (await dbClient.emailExists(email)) {
-    return res.send({ error: 'Already exist' }).status(400);
+    return res.status(400).send({ error: 'Already exist' });
   }
   const newUser = await dbClient.createUser(
     email,
     sha1(password, { asString: true }),
   );
-  return res.send(newUser).status(201);
+  return res.status(201).send(newUser);
 }
 
 async function getMe(req, res) {
-  const token = req.header('X-Token');
-  const authToken = `auth_${token}`;
-  const userId = await redisClient.get(authToken);
-  if (!userId) return res.send({ error: 'Unauthorized' }).status(401);
+  const { error, userId } = await getUserIdFromSession(req);
+
+  if (error || !userId) return res.status(401).send({ error });
   const user = await dbClient.getUserById(userId);
-  if (!user) return res.send({ error: 'Unauthorized' }).send(401);
-  return res.send(user).status(200);
+  if (!user) return res.status(401).send({ error: 'Unauthorized' });
+  return res.status(200).send(user);
 }
 
 export default { postNew, getMe };

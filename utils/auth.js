@@ -1,5 +1,6 @@
 import { Buffer } from 'node:buffer';
 import sha1 from 'sha1';
+import redisClient from './redis';
 import dbClient from './db';
 /* eslint-disable import/prefer-default-export */
 
@@ -24,4 +25,12 @@ async function login(req) {
   return { email };
 }
 
-export { extractCredentials, login };
+async function getUserIdFromSession(req) {
+  const token = req.header('X-Token');
+  const authToken = `auth_${token}`;
+  const userId = await redisClient.get(authToken);
+  if (!userId) return { error: 'Unauthorized' };
+  return { userId };
+}
+
+export { extractCredentials, login, getUserIdFromSession };
