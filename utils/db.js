@@ -72,13 +72,57 @@ class DBClient {
   }
 
   async createFolder(folder) {
-    const newFolder = await this.client.db().collection('files').insertOne(folder);
+    const newFolder = await this.client
+      .db()
+      .collection('files')
+      .insertOne(folder);
     return newFolder;
   }
 
   async createFile(file) {
     const newFile = await this.createFolder(file);
     return newFile;
+  }
+
+  async getUserDocument(documentId, userId) {
+    const document = await this.client
+      .db()
+      .collection('files')
+      .findOne({ _id: new ObjectId(documentId), userId });
+    if (!document) return document;
+    delete document._id;
+    return { ...document, id: documentId };
+  }
+
+  async getUserDocuments(parentId, userId, page) {
+    const documents = await this.client
+      .db()
+      .collection('files')
+      .aggregate([
+        { $match: { parentId, userId } },
+        { $skip: page * 20 },
+        { $limit: 20 },
+        {
+          $project: {
+            _id: 0,
+            id: '$_id',
+            userId: 1,
+            name: 1,
+            type: 1,
+            isPublic: 1,
+            parentId: 1,
+          },
+        },
+      ])
+      .toArray();
+    // .map((document) => {
+    //   const copyDocument = Object.create(document);
+    //   const id = copyDocument._id;
+    //   delete copyDocument._id;
+    //   return { ...copyDocument, id };
+    // });
+
+    return documents;
   }
 }
 

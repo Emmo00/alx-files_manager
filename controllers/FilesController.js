@@ -10,9 +10,10 @@ async function postUpload(req, res) {
 
   if (error || !userId) return res.status(401).send({ error });
 
-  const {
-    name, type, parentId, isPublic, data,
-  } = req.body;
+  const { name, type, data } = req.body;
+  let { parentId, isPublic } = req.body;
+  parentId = parentId || 0;
+  isPublic = isPublic === undefined || isPublic == null ? false : isPublic;
 
   if (!name) return res.status(400).send({ error: 'Missing name' });
   if (!type || !['folder', 'file', 'image'].includes(type)) {
@@ -41,7 +42,12 @@ async function postUpload(req, res) {
     const createdFolder = await dbClient.createFolder(newFolder);
 
     return res.status(201).send({
-      id: createdFolder.insertedId, userId, name, type, isPublic, parentId,
+      id: createdFolder.insertedId,
+      userId,
+      name,
+      type,
+      isPublic,
+      parentId,
     });
   }
   // store binary in local file storage
@@ -69,8 +75,35 @@ async function postUpload(req, res) {
   // return created file
   delete newFile.localPath;
   return res.status(201).send({
-    id: createdFile.insertedId, userId, name, type, isPublic, parentId,
+    id: createdFile.insertedId,
+    userId,
+    name,
+    type,
+    isPublic,
+    parentId,
   });
 }
 
-export default { postUpload };
+async function getShow(req, res) {
+  const { error, userId } = await getUserIdFromSession(req);
+
+  if (error || !userId) return res.status(401).send({ error });
+  const documentId = req.params.id;
+  const document = await dbClient.getUserDocument(documentId, userId);
+
+  if (!document) return res.status(404).send({ error: 'Not found' });
+  return res.status(200).send(document);
+}
+
+async function getIndex(req, res) {
+  const { error, userId } = await getUserIdFromSession(req);
+
+  if (error || !userId) return res.status(401).send({ error });
+
+  const parentId = req.query.parentId || 0;
+  const page = req.query.page || 0;
+  const documents = await dbClient.getUserDocuments(parentId, userId, page);
+  return res.status(200).send(documents);
+}
+
+export default { postUpload, getShow, getIndex };
