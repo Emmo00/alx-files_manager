@@ -3,6 +3,7 @@ import { createClient } from 'redis';
 class RedisClient {
   constructor() {
     this.client = createClient();
+    // eslint-disable-next-line no-console
     this.client.on('error', console.log);
   }
 

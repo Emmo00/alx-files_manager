@@ -1,4 +1,6 @@
 import { Buffer } from 'node:buffer';
+import sha1 from 'sha1';
+import dbClient from './db';
 /* eslint-disable import/prefer-default-export */
 
 function extractCredentials(authHeader) {
@@ -8,4 +10,18 @@ function extractCredentials(authHeader) {
   return { email: cred[0], password: cred[1] };
 }
 
-export { extractCredentials };
+async function login(req) {
+  const authHeader = req.header('Authorization');
+  if (!authHeader) return { error: 'Unauthorized' };
+  const { email, password } = extractCredentials(authHeader);
+  const hashedPassword = sha1(password, { asString: true });
+  if (
+    !(await dbClient.emailExists(email))
+    || !(await dbClient.correctPassword(email, hashedPassword))
+  ) {
+    return { error: 'Unauthorized' };
+  }
+  return { email };
+}
+
+export { extractCredentials, login };

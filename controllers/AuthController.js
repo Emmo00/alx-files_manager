@@ -1,20 +1,12 @@
-import sha1 from 'sha1';
 import { v4 as uuidv4 } from 'uuid';
 import dbClient from '../utils/db';
 import redisClient from '../utils/redis';
-import { extractCredentials } from '../utils/auth';
+import { login } from '../utils/auth';
 
 async function getConnect(req, res) {
-  const authHeader = req.header('Authorization');
-  if (!authHeader) return res.send({ error: 'Unauthorized' }).status(401);
-  const { email, password } = extractCredentials(authHeader);
-  const hashedPassword = sha1(password, { asString: true });
-  if (
-    !(await dbClient.emailExists(email))
-    || !(await dbClient.correctPassword(email, hashedPassword))
-  ) {
-    return res.send({ error: 'Unauthorized' }).status(401);
-  }
+  const { error, email } = await login(req);
+  if (error) return req.send({ error }).status(401);
+
   const user = await dbClient.getUserByEmail(email);
   const token = uuidv4();
   const authToken = `auth_${token}`;
