@@ -115,14 +115,16 @@ class DBClient {
         },
       ])
       .toArray();
-    // .map((document) => {
-    //   const copyDocument = Object.create(document);
-    //   const id = copyDocument._id;
-    //   delete copyDocument._id;
-    //   return { ...copyDocument, id };
-    // });
 
     return documents;
+  }
+
+  async updateDocumentPublish(document) {
+    const updateQuery = { $set: { isPublic: document.isPublic } };
+    await this.client
+      .db()
+      .collection('files')
+      .updateOne({ _id: new ObjectId(document.id) }, updateQuery);
   }
 }
 

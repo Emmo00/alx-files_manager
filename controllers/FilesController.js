@@ -106,4 +106,36 @@ async function getIndex(req, res) {
   return res.status(200).send(documents);
 }
 
-export default { postUpload, getShow, getIndex };
+async function putPublish(req, res) {
+  const { error, userId } = await getUserIdFromSession(req);
+
+  if (error || !userId) return res.status(401).send({ error });
+  const documentId = req.params.id;
+  const document = await dbClient.getUserDocument(documentId, userId);
+
+  if (!document) return res.status(404).send({ error: 'Not found' });
+  document.isPublic = true;
+  await dbClient.updateDocumentPublish(document);
+  return res.status(200).send(document);
+}
+
+async function putUnpublish(req, res) {
+  const { error, userId } = await getUserIdFromSession(req);
+
+  if (error || !userId) return res.status(401).send({ error });
+  const documentId = req.params.id;
+  const document = await dbClient.getUserDocument(documentId, userId);
+
+  if (!document) return res.status(404).send({ error: 'Not found' });
+  document.isPublic = false;
+  await dbClient.updateDocumentPublish(document);
+  return res.status(200).send(document);
+}
+
+export default {
+  postUpload,
+  getShow,
+  getIndex,
+  putPublish,
+  putUnpublish,
+};
