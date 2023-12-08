@@ -11,7 +11,7 @@ async function postNew(req, res) {
   }
   const newUser = await dbClient.createUser(
     email,
-    sha1(password, { asString: true }),
+    sha1(password),
   );
   return res.status(201).send(newUser);
 }

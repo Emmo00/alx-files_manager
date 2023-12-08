@@ -15,7 +15,8 @@ async function login(req) {
   const authHeader = req.header('Authorization');
   if (!authHeader) return { error: 'Unauthorized' };
   const { email, password } = extractCredentials(authHeader);
-  const hashedPassword = sha1(password, { asString: true });
+  if (!email || !password) return { error: 'Unauthorized' };
+  const hashedPassword = sha1(password);
   if (
     !(await dbClient.emailExists(email))
     || !(await dbClient.correctPassword(email, hashedPassword))
