@@ -1,4 +1,4 @@
-import { Buffer } from 'node:buffer';
+import { Buffer } from 'buffer';
 import sha1 from 'sha1';
 import redisClient from './redis';
 import dbClient from './db';
