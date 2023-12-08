@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
+import mime from 'mime-types';
 import { getUserIdFromSession } from '../utils/auth';
 import dbClient from '../utils/db';
 
@@ -132,10 +133,28 @@ async function putUnpublish(req, res) {
   return res.status(200).send(document);
 }
 
+async function getFile(req, res) {
+  const { userId } = await getUserIdFromSession(req);
+
+  const file = await dbClient.getFileById(req.params.id);
+  if (!file) return res.status(404).send({ error: 'Not found' });
+
+  if (!file.isPublic && file.userId !== userId) {
+    return res.status(404).send({ error: 'Not found' });
+  }
+  if (file.type === 'folder') {
+    return res.status(400).send({ error: "A folder doesn't have content" });
+  }
+  const fileMime = mime.lookup(file.localPath);
+  res.set('Content-Type', fileMime);
+  return res.sendFile(file.localPath);
+}
+
 export default {
   postUpload,
   getShow,
   getIndex,
   putPublish,
   putUnpublish,
+  getFile,
 };
