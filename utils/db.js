@@ -12,7 +12,8 @@ class DBClient {
   }
 
   isAlive() {
-    return this.client.isConnected();
+    if (this.client.db()) return true;
+    return false;
   }
 
   async nbUsers() {
