@@ -1,10 +1,12 @@
 import { v4 as uuidv4 } from 'uuid';
+import Queue from 'bull';
 import fs from 'fs';
 import mime from 'mime-types';
 import { getUserIdFromSession } from '../utils/auth';
 import dbClient from '../utils/db';
 
 const FOLDER_PATH = process.env.FOLDER_PATH || '/tmp/files_manager';
+const fileQueue = Queue('fileQueue');
 
 async function postUpload(req, res) {
   const { error, userId } = await getUserIdFromSession(req);
@@ -75,6 +77,9 @@ async function postUpload(req, res) {
   const createdFile = await dbClient.createFile(newFile);
   // return created file
   delete newFile.localPath;
+
+  if (newFile.type === 'image') fileQueue.add({ userId, fileId: newFile.id });
+
   return res.status(201).send({
     id: createdFile.insertedId,
     userId,
@@ -147,6 +152,13 @@ async function getFile(req, res) {
   }
   const fileMime = mime.lookup(file.localPath);
   res.set('Content-Type', fileMime);
+  const imageSize = req.query.size;
+  if (file.type === 'image' && imageSize) {
+    if (!fs.existsSync(`${file.localPath}-${imageSize}`)) {
+      return res.status(404).send({ error: 'Not found' });
+    }
+    file.localPath = `${file.localPath}-${imageSize}`;
+  }
   return res.sendFile(file.localPath);
 }
 
